@@ -4,9 +4,9 @@
 
 #include "Network.h"
 
-Network::Network() = default;
+Network::Network() {};
 
-Network::~Network() = default;
+Network::~Network() {};
 
 void Network::init() {
 	while (!buffer_.empty())

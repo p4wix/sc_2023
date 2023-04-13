@@ -5,7 +5,11 @@
 #ifndef SC_2023_SIMULATOR_H
 #define SC_2023_SIMULATOR_H
 
+#include <iostream>
+
 #include "../Network/Network.h"
+#include "../Constants/Constants.h"
+#include "../User/User.h"
 
 class Simulator {
 	size_t clock_ = 0;

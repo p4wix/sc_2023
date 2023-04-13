@@ -11,23 +11,21 @@
 #include "../Constants/Constants.h"
 #include "../Process/Process.h"
 
-class BaseStation;
-
-class User {
+class User : public Process {
 protected:
-	const size_t id_ = 0; // const user id
-	double currentLocation{}; // user position along the x axis
-	double speed{}; // User speed
-	double powerReceivedBS1{}; // power received from station BS1
-	double powerReceivedBS2{}; // power received from station BS2
-	bool connected{}; // is user connected to any of the base stations
-	int timeToTrigger{}; // Optimisation of the parameter TTT
+	size_t id_ = 0; // const user id
+	double currentLocation_; // user position along the x axis
+	double speed_; // User speed
+	double powerReceivedBS1_{}; // power received from station BS1
+	double powerReceivedBS2_{}; // power received from station BS2
+	bool connected_{}; // is user connected to any of the base stations
+	int timeToTrigger_{}; // Optimisation of the parameter TTT
 
 public:
-	//User(size_t id, size_t time, Network *network, Agenda *agenda, double speed_, double location);
-	User(double speed_, double location);
-	~User();
+	User(size_t, Network*, Agenda*, size_t, double, double);
+	~User() override;
 
+	void execute() override;
 	void setPowerReceived(); // the power received by the base station user
 	void move();
 	void handleAlfaCondition(); // we check the condition if the hanover starts

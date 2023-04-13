@@ -12,26 +12,29 @@
 #include <vector>
 #include <queue>
 
-class Network;
+#include "../Network/Network.h"
 
 class Process {
 public:
-	// Zdefiniowane procesy
-	enum class State { GENERATE_USER, START_HANDOVER, REMOVE_USER, REPORT_POWER, CHANGE_STATION };
 	// Kolejka priorytetowa która sortuje w zależności od czasu
 	typedef std::priority_queue<Process*, std::vector<Process*>, std::function<bool(Process*, Process*)>> Agenda;
 
-	Process(size_t, Network*, Agenda*);
+	// Zdefiniowane procesy
+	enum class State { GENERATE_USER, START_HANDOVER, REMOVE_USER, REPORT_POWER, CHANGE_STATION };
+
+	Process(size_t time, Network* network, Agenda* agenda);
 	virtual ~Process();
 
-	void virtual execute () = 0;
-	//void activate (double);
-	size_t get_time();
+	virtual void execute () = 0;
+	void activate (size_t, bool = false);
+	size_t get_time() const;
+	bool isTerminated() const;
+	void setTerminated();
 
 protected:
 	bool terminated_{};
 	size_t time_{};
-	State state_;
+	State state_ = State::GENERATE_USER;
 	Network* network_ = nullptr;
 	Agenda* agenda_ = nullptr;
 
