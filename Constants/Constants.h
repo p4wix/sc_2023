@@ -15,11 +15,11 @@ public:
 	static const double t; // Time in ms, how often the user receives power from BS1 and BS2
 	static const double delta; // difference the power received from BS1 and BS2 by the user (less then)
 	static const int n; // max number of handled user at once
-	static const int alfa;
+	static const double alfa;
+	static const int timeToTriggerStartValue;
 
 	static double v(); // user speed, [5-50]
 	static double s(); // random value added to received power
-	static double tau(); // random moment when the user appears
 };
 
 

@@ -4,7 +4,24 @@
 
 #include "Network.h"
 
-void Network::spawnUser() {
-	User* u = new User(Constants::x, Constants::v());
-	users.push_back(u);
+Network::Network() = default;
+
+Network::~Network() = default;
+
+void Network::init() {
+	while (!buffer_.empty())
+	{
+		delete buffer_.front();
+		buffer_.pop();
+	}
+	full_ = false;
+}
+
+void Network::generateUser(User *u) {
+	buffer_.push(u);
+	//std::cout << "Generated User id:" << u->getId() << "\n";
+}
+
+size_t Network::get_buffer_size() {
+	return buffer_.size();
 }

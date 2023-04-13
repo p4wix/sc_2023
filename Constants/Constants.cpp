@@ -6,25 +6,26 @@
 
 const double Constants::l = 5000; // meters
 const double Constants::x = 2000; // meters
-const double Constants::t = 0.02; // 20ms -> 0.02s
+const double Constants::t = 20; // 20ms -> 0.02s
 const double Constants::delta = 8;
 const int Constants::n = 20;
-const int Constants::alfa = 3;
+const double Constants::alfa = 3;
+const int Constants::timeToTriggerStartValue = 80;
 
 double Constants::v() {
-	std::uniform_real_distribution<double> dist(5.0, 50.0);
-	static std::mt19937 rng(std::random_device{}());
-	return dist(rng);
+	static std::random_device randDev;
+	static std::mt19937 twister(randDev());
+	static std::uniform_real_distribution<double> dist;
+
+	dist.param(std::uniform_real_distribution<double>::param_type(5, 50));
+
+	return std::round(dist(twister) * 100) / 100;
 }
 
 double Constants::s() {
-	std::normal_distribution<double> dist(0.0, 4.0);
-	static std::mt19937 rng(std::random_device{}());
-	return dist(rng);
-}
+	std::random_device randDev;
+	std::mt19937 gen(randDev());
+	std::normal_distribution<double> distribution(0.0, 4.0);
 
-double Constants::tau() {
-	std::exponential_distribution<double> dist(1.0);
-	static std::mt19937 rng(std::random_device{}());
-	return dist(rng);
+	return distribution(gen);
 }

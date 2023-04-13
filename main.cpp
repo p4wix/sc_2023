@@ -1,12 +1,9 @@
-#include <iostream>
-#include "User/User.h"
-#include "BaseStation/BaseStation.h"
-#include "Constants/Constants.h"
+#include "Simulator/Simulator.h"
 
 int main() {
-	User u(Constants::x, Constants::v());
+	Network* network = new Network();
+	Simulator simulator = Simulator(network);
 
-	std::cout << u.powerReceived() << std::endl;
-
+	simulator.run(10);
 	return 0;
 }
