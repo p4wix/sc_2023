@@ -12,7 +12,7 @@
 #include "../User/User.h"
 
 class Simulator {
-	size_t clock_ = 0;
+	size_t clock_{};
 	Network* network_ = nullptr;
 
 public:

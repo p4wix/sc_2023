@@ -20,6 +20,7 @@ public:
 
 	static double v(); // user speed, [5-50]
 	static double s(); // random value added to received power
+	static std::exponential_distribution<double> tau_distribution;
 };
 
 

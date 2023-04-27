@@ -4,13 +4,13 @@
 
 #include "Constants.h"
 
-const double Constants::l = 5000; // meters
-const double Constants::x = 2000; // meters
-const double Constants::t = 20; // 20ms -> 0.02s
-const double Constants::delta = 8;
+const double Constants::l = 5000.0; // meters
+const double Constants::x = 2000.0; // meters
+const double Constants::t = 20.0 / 1000.0; // 20ms -> 0.02s
+const double Constants::delta = 8.0;
 const int Constants::n = 20;
-const double Constants::alfa = 3;
-const int Constants::timeToTriggerStartValue = 80;
+const double Constants::alfa = 3.0;
+const int Constants::timeToTriggerStartValue = 60;
 
 double Constants::v() {
 	static std::random_device randDev;
