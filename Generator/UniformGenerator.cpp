@@ -4,10 +4,7 @@
 
 #include "UniformGenerator.h"
 
-UniformGenerator::UniformGenerator(int kernel): kernel_(kernel)
-{
-	// empty
-}
+UniformGenerator::UniformGenerator(int kernel): kernel_(kernel) { }
 
 UniformGenerator::~UniformGenerator() = default;
 

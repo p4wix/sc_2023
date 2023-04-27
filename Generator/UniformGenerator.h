@@ -8,8 +8,13 @@
 #include <string>
 #include <cmath>
 
-class UniformGenerator
-{
+class UniformGenerator {
+	int kernel_;
+	const double kM = 2147483647.0;
+	static const int kA = 16807;
+	static const int kQ = 127773;
+	static const int kR = 2836;
+
 public:
 	UniformGenerator(int);
 	virtual ~UniformGenerator();
@@ -18,12 +23,6 @@ public:
 	double Rand();
 
 	int get_kernel() const;
-private:
-	int kernel_;
-	const double kM = 2147483647.0;
-	static const int kA = 16807;
-	static const int kQ = 127773;
-	static const int kR = 2836;
 };
 
 
