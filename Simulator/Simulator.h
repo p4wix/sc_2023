@@ -12,12 +12,20 @@
 #include "../User/User.h"
 
 class Simulator {
-	size_t clock_{};
+	double clock_{};
 	Network* network_ = nullptr;
+	std::fstream resultsFile;
 
 public:
+	UniformGenerator speedGenerator; // rozkład równomierny przeskalowany o [5;50]
+	UniformGenerator spawnTimeGenerator; // rozkład wykładniczym o intensywności λ
+	UniformGenerator powerBaseStationGenerator; // rozkład Gaussa z średnią 0 i odchyleniem 4
+
 	explicit Simulator(Network*);
+	~Simulator();
 	void run(int);
+	void handleResultsFile();
+	void handleCollectNetworkDataToFile();
 };
 
 

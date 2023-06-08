@@ -4,25 +4,47 @@
 
 #include "Process.h"
 
-Process::Process(size_t time, Network* network, Agenda *agenda) : time_(time), network_(network), agenda_(agenda) {}
+Process::Process(double time, Network* network, Agenda *agenda) : time_(time), network_(network), agenda_(agenda) {}
 
 Process::~Process() { };
 
-void Process::activate(size_t time, bool relative) {
+void Process::activate(double time, bool relative) {
 	if (relative) {
 		time_ += time;
 	}
 	else {
 		time_ = time;
 	}
-	agenda_->push(this);
+	if(!waiting) {
+		agenda_->push(this);
+	}
 }
 
-std::size_t Process::get_time() const { return time_; }
+void Process::sleep() {
+	waiting = true;
+}
+
+double Process::get_time() const { return time_; }
 
 bool Process::isTerminated() const { return terminated_; }
 
-void Process::setTerminated() { terminated_ = true; }
+void Process::setTerminated() {
+	terminated_ = true;
+
+	if(agenda_->empty()) {
+		// means all users from the buffer and waiting buffer served
+		endSimulation = true;
+	}
+}
+
+void Process::setWaitingFalseAndActive(double time) {
+	waiting = false;
+	activate(time, false);
+}
+
+bool Process::getEndSimulationCondition() const {
+	return endSimulation;
+}
 
 /*
 

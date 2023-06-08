@@ -4,19 +4,23 @@
 
 #include "User.h"
 
-User::User(size_t time, Network* network, Agenda* agenda, size_t id, double speed, double location) : Process(time, network, agenda),
+User::User(double time, Network* network, Agenda* agenda, int id, double speed, double location,
+					 UniformGenerator* speedGenerator_, UniformGenerator* spawnTimeGenerator_, UniformGenerator* powerBaseStationGenerator_) :
+	Process(time, network, agenda),
 	id_(id),
 	speed_(speed),
 	currentLocation_(location),
 	currentBaseStation(BaseStation::BS1),
 	powerReceivedBS1_(0),
 	powerReceivedBS2_(0),
-	connected_(true),
-	timeToTrigger_(Constants::timeToTriggerStartValue) {
+	timeToTrigger_(Constants::timeToTriggerStartValue),
+	timeToNextRaport(Constants::t),
+	speedGenerator(speedGenerator_),
+	spawnTimeGenerator(spawnTimeGenerator_),
+	powerBaseStationGenerator(powerBaseStationGenerator_)
+{
 	this->setPowerReceived();
 }
-
-User::~User() = default;
 
 void User::execute() {
 	bool active = true;
@@ -24,81 +28,68 @@ void User::execute() {
 		switch (state_) {
 			case State::GENERATE_USER:
 				network_->addUserToNetwork(this);
-				// Zaplanowanie następnego usera który ma być dodany do systemu
-				{
+				if(!network_->isUsersLimitReached){
 					auto new_id = id_ + 1;
-					auto new_user = new User(time_, network_, agenda_, new_id, Constants::v(), Constants::x);
-					new_user->activate(rand() % 25);
+					auto new_user = new User(time_, network_, agenda_, new_id, speedGenerator->RandScaled(), Constants::x,
+																	 speedGenerator, spawnTimeGenerator, powerBaseStationGenerator);
+					new_user->activate(spawnTimeGenerator->RandExp(Constants::lambda));
 				}
 				state_ = State::REPORT_POWER;
 				break;
 			case State::REPORT_POWER:
-				// pobieranie mocy z BS1 i BS2
 				this->setPowerReceived();
 
-				// sprawdzamy warunek alfa (czy handover)
 				if (this->alphaCondition()) {
-					state_ = State::HANDOVER;
-				}
-				// sprawdzamy warunek czy user jest w odległości x od stacji BS2 (wtedy ma być rozłączenie)
-				else if (this->distanceCondition()) {
-					state_ = State::REMOVE_USER;
-					Process::setTerminated();
-					active = false;
-				}
-				// sprawdzamy warunek delta czyli czy user ma być od razu rozłączony
-				else if (this->deltaCondition()) {
-					state_ = State::REMOVE_USER;
-					active = false;
+					timeToTrigger_ -= 20;
+					if(timeToTrigger_ == 0) {
+						if(currentBaseStation == BaseStation::BS1) currentBaseStation = BaseStation::BS2;
+						else currentBaseStation = BaseStation::BS1;
+						++howManyTimesUserChangedBaseStation;
+						timeToTrigger_ = Constants::timeToTriggerStartValue;
+					}
 				}
 				else {
-					active = false;
 					timeToTrigger_ = Constants::timeToTriggerStartValue;
 				}
-
-				// jeśli żaden z warunków nie jest spełniony to odkładamy usera za 20ms i przesuwany go w systemie
-				Process::activate(20);
-				this->move();
-				break;
-			case State::HANDOVER:
-				timeToTrigger_ -= 20;
-				if (timeToTrigger_ == 0) {
+				if (this->distanceCondition()) {
+					state_ = State::REMOVE_USER;
+				}
+				if (this->deltaCondition()) {
+					state_ = State::REMOVE_USER;
+				}
+				if(state_ != State::REMOVE_USER) {
 					Process::activate(20);
-					state_ = State::CHANGE_STATION;
+					active = false;
+					this->move();
 				}
 				break;
-			case State::CHANGE_STATION:
-				currentBaseStation = BaseStation::BS2;
-				// po zmianie stacji, następny stan to report_power i odkładamy usera na 20ms
-				state_ = State::REPORT_POWER;
-				Process::activate(20);
-				active = false;
-				break;
 			case State::REMOVE_USER:
-				// wake up next process/user in buffer in current time
-				network_->getBufferFirst()->activate(time_, false);
+				network_->removeUserFromNetwork(this);
+				if(!network_->isWaitingBufforEmpty()){
+					// wake up, pierwszy process który jest uśpiony w kolejce waitingBuffor
+					network_->getBufforLastElement()->setWaitingFalseAndActive(time_);
+					network_->removeWaitingBufforFirstUser();
+				}
 				Process::setTerminated();
+				active = false;
 				break;
 		}
 	}
 }
 
 void User::setPowerReceived() {
-	powerReceivedBS1_ = 4.56 - 22 * std::log10(currentLocation_) + Constants::s();
-	powerReceivedBS2_ = 4.56 - 22 * std::log10(currentLocation_) + Constants::s();
+	powerReceivedBS1_ = 4.56 - 22 * std::log(currentLocation_) + powerBaseStationGenerator->RandGauss(0, 4).first;
+	powerReceivedBS2_ = 4.56 - 22 * std::log(currentLocation_) + powerBaseStationGenerator->RandGauss(0, 4).second;
 }
 
-// If true start counting until handover
 bool User::alphaCondition() const {
-	return powerReceivedBS2_ - powerReceivedBS1_ > Constants::alfa;
+	return currentBaseStation == BaseStation::BS1 ? powerReceivedBS2_ - powerReceivedBS1_ >= Constants::alfa : powerReceivedBS1_ - powerReceivedBS2_ >= Constants::alfa;
 }
 
-// If true disconnect user :(
 bool User::deltaCondition() const {
-	return powerReceivedBS1_ < powerReceivedBS2_ - Constants::delta;
+	return currentBaseStation == BaseStation::BS1 ? powerReceivedBS1_ - powerReceivedBS2_ >= Constants::delta : powerReceivedBS2_ - powerReceivedBS1_ >= Constants::delta;
 }
 
-// If true change station
 bool User::distanceCondition() const {
 	return currentLocation_ >= 3000;
 }
@@ -107,6 +98,20 @@ void User::move() {
 	currentLocation_ += speed_;
 }
 
-size_t User::getId() const {
+int User::get_id() const {
 	return id_;
+}
+
+void User::sentUserReport(std::fstream& file) {
+	std::stringstream csvLine;
+
+	if (file.tellg() == 0) {
+		// File is empty, write column titles
+		file << "Time, User Id, Buffer Size, Waiting Buffer Size, How many times user changed base station\n";
+	}
+
+	csvLine << Process::get_time() << ',' << id_ << ',' << network_->get_buffer_size() << ','
+					<< network_->get_waiting_buffer_size() << ',' << howManyTimesUserChangedBaseStation << '\n';
+
+	file << csvLine.str();
 }

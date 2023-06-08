@@ -8,6 +8,8 @@
 #include <iostream>
 #include <random>
 
+#include "../Generator/UniformGenerator.h"
+
 class Constants {
 public:
 	static const double l; // (l) Distance from  BS 1 and BS 2
@@ -17,11 +19,7 @@ public:
 	static const int n; // max number of handled user at once
 	static const double alfa;
 	static const int timeToTriggerStartValue;
-
-	static double v(); // user speed, [5-50]
-	static double s(); // random value added to received power
-	static std::exponential_distribution<double> tau_distribution;
+	static const double lambda;
 };
-
 
 #endif //SC_2023_CONSTANTS_H

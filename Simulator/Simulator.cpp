@@ -4,41 +4,84 @@
 
 #include "Simulator.h"
 
-Simulator::Simulator(Network* network) : network_(network) { }
+Simulator::Simulator(Network* network) : network_(network), speedGenerator(144311), spawnTimeGenerator(197555725), powerBaseStationGenerator(756247811) {
+	// setting up file to save every user's report
+	handleResultsFile();
+}
+
+Simulator::~Simulator() {
+	handleCollectNetworkDataToFile();
+	resultsFile.close();
+	delete network_;
+}
 
 void Simulator::run(int time) {
-	clock_ = 0;
-	network_->init();
 	std::cout << "Started Simulation method process interaction (M4): \n";
+	// setting up time
+	clock_ = 0;
 
 	// function that compares the activation times of two processes and returns true if the activation time of the process on the right is less
-	auto cmp = [](Process* left, Process* right) { return left->get_time() > right->get_time(); };
+	auto cmp = [](Process *left, Process *right) { return left->get_time() > right->get_time(); };
 	Process::Agenda agenda(cmp);
 
-	// Create first user process
-	size_t id = 1;
-	auto user = new User(clock_, network_, &agenda, id, Constants::v(), Constants::x);
-	user->activate(0); // activate now
+	// setting up first user process
+	int id = 0;
+	auto user = new User(clock_, network_, &agenda, id, speedGenerator.RandScaled(), Constants::x, &speedGenerator,
+											 &spawnTimeGenerator, &powerBaseStationGenerator);
+	user->activate(0);
 
 	// main loop
-	while (clock_ < static_cast<size_t>(time))
-	{
+	while (clock_ < time) {
 		// we take process from top, that have smallest activation time, so it will be next executed
-		Process* process = agenda.top();
+		Process *process = agenda.top();
+
+		if(process->getEndSimulationCondition()){
+			std::cout << "Users from the buffer and waiting buffer served\nEND of the Simulation\n\n";
+			break;
+		}
+
 		// remove it from queue
 		agenda.pop();
+
 		// Setting the simulation time to the current process activation time
 		clock_ = process->get_time();
 
-		std::cout << "Simulation Time:" << clock_ << "\n";
+		std::cout << "Simulation Time:" << clock_ << std::endl;
+
+		// save current report data to result
+
+		process->sentUserReport(resultsFile);
+
+		// execute current process first from agenda, that has the less activation time. (only those processes which are in the buffer)
 		process->execute();
 
 		// if it has been completed, release the memory
 		if (process->isTerminated()) {
+					if(agenda.top() != process){
+						int a = 0;
+					}
+			//agenda.pop();
 			delete process;
 		}
+
 	}
 }
+
+void Simulator::handleResultsFile() {
+	std::string filename = "Simulator/SimulationData/results.csv";
+	resultsFile.open(filename, std::ios::out);
+
+	if (!resultsFile.is_open()) {
+		std::cout << "Error opening file: " << filename << std::endl;
+		return;
+	}
+}
+
+void Simulator::handleCollectNetworkDataToFile() {
+	resultsFile << "Handed users: " << network_->numbersOfHandledUsers.size() << std::endl;
+}
+
+
 
 /*
 Sprawdzenie warunku clock_ < static_cast<size_t>(time). Jeśli warunek ten nie jest spełniony,

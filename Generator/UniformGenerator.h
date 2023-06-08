@@ -7,6 +7,12 @@
 
 #include <string>
 #include <cmath>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <limits>
+#include <random>
+#include <utility>
 
 class UniformGenerator {
 	int kernel_;
@@ -20,9 +26,14 @@ public:
 	virtual ~UniformGenerator();
 
 	// Draws number between <0,1>
-	double Rand();
-
 	int get_kernel() const;
+	void generateSeedsData();
+	static std::vector<double> generateDataBasedOnSeed(int);
+
+	double Rand(); // równomierny ale od [0,1]
+	double RandScaled();
+	double RandExp(double); // wykładniczy
+	std::pair<double, double> RandGauss(double, double);
 };
 
 

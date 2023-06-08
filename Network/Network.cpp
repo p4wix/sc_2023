@@ -4,42 +4,63 @@
 
 #include "Network.h"
 
-Network::Network() {};
+Network::Network() = default;
 
-Network::~Network() {};
-
-// make sure that queue are empty before we start adding users.
-void Network::init() {
-	while (!buffer_.empty())
-	{
-		delete buffer_.front();
-		buffer_.pop();
-	}
-	full_ = false;
-}
+Network::~Network() = default;
 
 // adding user to a buffer (to network system)
 void Network::addUserToNetwork(User *u) {
-	buffer_.push(u);
-	std::cout << "Generated User id:" << u->getId() << "\n";
+		if(get_buffer_size() < Constants::n) {
+			buffer_.push(u);
+		}
+		else {
+			waitingBuffer_.push(u);
+			// dodatkowo powinniśmy zawieśić jego proces do momentu kiedy zwolni się miejsce w głównej kolejce
+			u->sleep();
+		}
 }
 
-User* Network::getBufferFirst() {
-	return buffer_.front();
+void Network::removeUserFromNetwork(User *user) {
+	numbersOfHandledUsers.push_back(user->get_id());
+	if(numbersOfHandledUsers.size() == 300) {
+		isUsersLimitReached = true;
+	}
+
+	std::queue<User*> tempBuffer;
+	while (!buffer_.empty()) {
+		User* currentUser = buffer_.front();
+		buffer_.pop();
+
+		if (currentUser->get_id() != user->get_id()) {
+			tempBuffer.push(currentUser);
+		}
+	}
+
+	buffer_ = std::move(tempBuffer);
+
+	if(!waitingBuffer_.empty()) {
+		User* firstWaitingUser = waitingBuffer_.front();
+		buffer_.push(firstWaitingUser);
+	}
+
 }
 
-// get size of the current active users in network system
 size_t Network::get_buffer_size() {
 	return buffer_.size();
 }
 
-bool Network::isNetworkFull() {
-	if(buffer_.size() == 20) {
-		full_ = true;
-	}
-	else {
-		full_ = false;
-	}
-	return full_;
+size_t Network::get_waiting_buffer_size() {
+	return waitingBuffer_.size();
 }
 
+bool Network::isWaitingBufforEmpty() {
+	return waitingBuffer_.empty();
+}
+
+User *Network::getBufforLastElement() {
+	return buffer_.back();
+}
+
+void Network::removeWaitingBufforFirstUser() {
+	waitingBuffer_.pop();
+}

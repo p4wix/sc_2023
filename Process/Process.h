@@ -20,20 +20,27 @@ public:
 	typedef std::priority_queue<Process*, std::vector<Process*>, std::function<bool(Process*, Process*)>> Agenda;
 
 	// defined user process state
-	enum class State { GENERATE_USER, HANDOVER, REMOVE_USER, REPORT_POWER, CHANGE_STATION };
+	enum class State { GENERATE_USER, REPORT_POWER, REMOVE_USER };
 
-	Process(size_t time, Network* network, Agenda* agenda);
-	virtual ~Process();
+	Process(double time, Network* network, Agenda* agenda);
+	virtual ~Process() = 0;
 
 	virtual void execute () = 0;
-	void activate (size_t, bool = true); // relative false sets the direct time, true increments current process time
-	size_t get_time() const;
-	bool isTerminated() const;
+	virtual void sentUserReport (std::fstream&) = 0;
+
+	void activate (double, bool = true); // relative false sets the direct time, true increments current process time
+	void sleep();
+	[[nodiscard]] double get_time() const;
+	[[nodiscard]] bool isTerminated() const;
 	void setTerminated();
+	void setWaitingFalseAndActive(double);
+	[[nodiscard]] bool getEndSimulationCondition() const;
 
 protected:
+	bool waiting{};
 	bool terminated_{};
-	size_t time_{};
+	bool endSimulation{};
+	double time_{};
 	State state_ = State::GENERATE_USER;
 	Network* network_ = nullptr;
 	Agenda* agenda_ = nullptr;

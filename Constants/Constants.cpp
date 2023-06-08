@@ -6,26 +6,10 @@
 
 const double Constants::l = 5000.0; // meters
 const double Constants::x = 2000.0; // meters
-const double Constants::t = 20.0 / 1000.0; // 20ms -> 0.02s
-const double Constants::delta = 8.0;
-const int Constants::n = 20;
+const double Constants::t = 20; // 20ms -> 0.02s
+const double Constants::delta = 20.0; // albo 20.0;
+const int Constants::n = 20; // max user in system
 const double Constants::alfa = 3.0;
 const int Constants::timeToTriggerStartValue = 60;
+const double Constants::lambda = 0.01755; // im większa lambda tym częściej pojawiają się userzy
 
-double Constants::v() {
-	static std::random_device randDev;
-	static std::mt19937 twister(randDev());
-	static std::uniform_real_distribution<double> dist;
-
-	dist.param(std::uniform_real_distribution<double>::param_type(5, 50));
-
-	return std::round(dist(twister) * 100) / 100;
-}
-
-double Constants::s() {
-	std::random_device randDev;
-	std::mt19937 gen(randDev());
-	std::normal_distribution<double> distribution(0.0, 4.0);
-
-	return distribution(gen);
-}

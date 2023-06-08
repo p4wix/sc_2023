@@ -7,25 +7,31 @@
 
 #include <iostream>
 #include <queue>
+#include <list>
 #include "../User/User.h"
 
 class User;
 
 class Network {
 	std::queue<User*> buffer_;
-	bool full_ = false; // true -> system full false user can join
+	std::queue<User*> waitingBuffer_;
 
 public:
-	static const size_t generate_user_max_time = 10;
+	bool isUsersLimitReached{};
+	std::list<int> numbersOfHandledUsers{};
 
 	Network();
 	~Network();
 
-	void init();
-	void addUserToNetwork(User* user);
-	bool isNetworkFull();
+	void addUserToNetwork(User*);
+	void removeUserFromNetwork(User*);
+	bool isWaitingBufforEmpty();
+
 	size_t get_buffer_size();
-	User* getBufferFirst();
+	size_t get_waiting_buffer_size();
+
+	User* getBufforLastElement();
+	void removeWaitingBufforFirstUser();
 };
 
 #endif //SC_2023_NETWORK_H
