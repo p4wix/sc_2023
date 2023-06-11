@@ -4,26 +4,42 @@
 
 #include "Network.h"
 
-Network::Network() = default;
+Network::Network(char** argv) : argv_(argv) {
+	handleFiles();
+};
 
-Network::~Network() = default;
+Network::~Network() {
+	currentUsersNumberInBuffersFile.close();
+	currentUsersDisconnectReportFile.close();
+	currentUsersChangeStationReportFile.close();
+}
 
-// adding user to a buffer (to network system)
-void Network::addUserToNetwork(User *u) {
-		if(get_buffer_size() < Constants::n) {
-			buffer_.push(u);
-		}
-		else {
-			waitingBuffer_.push(u);
-			// dodatkowo powinniśmy zawieśić jego proces do momentu kiedy zwolni się miejsce w głównej kolejce
-			u->sleep();
-		}
+void Network::addUserToNetwork(User *user) {
+	++allUsers;
+	if(get_buffer_size() < Constants::n) {
+		buffer_.push(user);
+		user->setUserJoinTime(user->get_time());
+	}
+	else {
+		++waitingBuffer_;
+	}
 }
 
 void Network::removeUserFromNetwork(User *user) {
-	numbersOfHandledUsers.push_back(user->get_id());
-	if(numbersOfHandledUsers.size() == 300) {
+	// +1 number of handled users
+	++numbersOfHandledUsers;
+
+	//std::stoi(argv_[2])
+	if(numbersOfHandledUsers == std::stoi(argv_[2])) {
 		isUsersLimitReached = true;
+	}
+
+	// set user leave time
+	user->setUserLeaveTime(user->get_time());
+
+	// send user report
+	if(numbersOfHandledUsers > 25) {
+		sendCurrentUserDisconnectReport(user);
 	}
 
 	std::queue<User*> tempBuffer;
@@ -38,29 +54,81 @@ void Network::removeUserFromNetwork(User *user) {
 
 	buffer_ = std::move(tempBuffer);
 
-	if(!waitingBuffer_.empty()) {
-		User* firstWaitingUser = waitingBuffer_.front();
-		buffer_.push(firstWaitingUser);
+	if(numbersOfHandledUsers > 25) {
+		//sendCurrentUsersNumberInBuffersReport(user->get_time(), user->get_id());
 	}
+}
 
+void Network::decrementWaitingBuffer() {
+	if (waitingBuffer_ != 0) {
+		--waitingBuffer_;
+	}
 }
 
 size_t Network::get_buffer_size() {
 	return buffer_.size();
 }
 
-size_t Network::get_waiting_buffer_size() {
-	return waitingBuffer_.size();
+void Network::sendCurrentUsersNumberInBuffersReport(double currentSystemTime, int id) {
+	std::stringstream csvLine;
+
+	if (currentUsersNumberInBuffersFile.tellg() == 0) {
+		currentUsersNumberInBuffersFile << "Id,Time,BufferSize,WaitingBuffer,HandledUsers\n";
+	}
+
+	csvLine << id << ',' << currentSystemTime << ',' << get_buffer_size() << ','
+					<< waitingBuffer_ << ',' << numbersOfHandledUsers << '\n';
+
+	currentUsersNumberInBuffersFile << csvLine.str();
 }
 
-bool Network::isWaitingBufforEmpty() {
-	return waitingBuffer_.empty();
+void Network::sendCurrentUserDisconnectReport(User *user) {
+	std::stringstream csvLine;
+
+	if (currentUsersDisconnectReportFile.tellg() == 0) {
+		currentUsersDisconnectReportFile << "Id,Time,CurrentLocation,HowManyTimesBaseChanged,ByDelta,ByDistance,TimeInNetwork,userSpeed\n";
+	}
+
+	csvLine << user->get_id() << ',' << user->get_time() << ','
+					<< user->get_current_location() << ',' << user->get_how_many_times_base_changed() << ','
+					<< user->get_delta_disc() << "," << user->get_distance_disc() << ',' << user->get_user_time_in_network() << "," << user->get_user_speed() << std::endl;
+
+	currentUsersDisconnectReportFile << csvLine.str();
 }
 
-User *Network::getBufforLastElement() {
-	return buffer_.back();
+void Network::sendCurrentUserChangeStationReport(User *user) {
+	std::stringstream csvLine;
+
+	if (currentUsersChangeStationReportFile.tellg() == 0) {
+		currentUsersChangeStationReportFile << "Id,Time,CurrentLocation,HowManyTimesBaseChanged,CurrentTimeInNetWorkWhenBaseChanged\n";
+	}
+
+	csvLine << user->get_id() << ',' << user->get_time() << ','
+					<< user->get_current_location() << ',' << user->get_how_many_times_base_changed() << ','
+					<< (user->get_time() - user->get_user_join_time()) << std::endl;
+
+	currentUsersChangeStationReportFile << csvLine.str();
 }
 
-void Network::removeWaitingBufforFirstUser() {
-	waitingBuffer_.pop();
+void Network::handleFiles() {
+	std::string usersInBufferFileName = "../FinalData/usersInBuffer/Seed-" + std::to_string(std::stoi(argv_[1])) +
+																				"/result_lambda-" + std::to_string(std::stod(argv_[3])) + "-TTT-" +
+																				std::to_string(std::stoi(argv_[4])) + ".csv";
+
+	std::string disconnectFileName = "../FinalData/disconnect/Seed-" + std::to_string(std::stoi(argv_[1])) +
+																			"/result_lambda-" + std::to_string(std::stod(argv_[3])) + "-TTT-" +
+																			std::to_string(std::stoi(argv_[4])) + ".csv";
+
+	std::string changeFileName = "../FinalData/change/Seed-" + std::to_string(std::stoi(argv_[1])) +
+																			"/result_lambda-" + std::to_string(std::stod(argv_[3])) + "-TTT-" +
+																			std::to_string(std::stoi(argv_[4])) + ".csv";
+
+	currentUsersNumberInBuffersFile.open(usersInBufferFileName, std::ios::out);
+	currentUsersDisconnectReportFile.open(disconnectFileName, std::ios::out);
+	currentUsersChangeStationReportFile.open(changeFileName, std::ios::out);
+
+	if (!currentUsersNumberInBuffersFile.is_open() or !currentUsersDisconnectReportFile.is_open() or !currentUsersChangeStationReportFile.is_open()) {
+		std::cout << "Error opening file to save results: " << std::endl;
+		return;
+	}
 }

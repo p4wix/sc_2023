@@ -22,18 +22,17 @@ class UniformGenerator {
 	static const int kR = 2836;
 
 public:
-	UniformGenerator(int);
+	explicit UniformGenerator(int);
 	virtual ~UniformGenerator();
 
-	// Draws number between <0,1>
-	int get_kernel() const;
 	void generateSeedsData();
-	static std::vector<double> generateDataBasedOnSeed(int);
 
-	double Rand(); // równomierny ale od [0,1]
+	double Rand();
 	double RandScaled();
-	double RandExp(double); // wykładniczy
+	double RandExp(double); // exponential
 	std::pair<double, double> RandGauss(double, double);
+
+	[[nodiscard]] int get_kernel() const;
 };
 
 

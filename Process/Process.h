@@ -26,14 +26,12 @@ public:
 	virtual ~Process() = 0;
 
 	virtual void execute () = 0;
-	virtual void sentUserReport (std::fstream&) = 0;
-
+	virtual int userId () = 0;
 	void activate (double, bool = true); // relative false sets the direct time, true increments current process time
-	void sleep();
+	void setTerminated();
+
 	[[nodiscard]] double get_time() const;
 	[[nodiscard]] bool isTerminated() const;
-	void setTerminated();
-	void setWaitingFalseAndActive(double);
 	[[nodiscard]] bool getEndSimulationCondition() const;
 
 protected:

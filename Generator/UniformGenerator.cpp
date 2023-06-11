@@ -8,8 +8,7 @@ UniformGenerator::UniformGenerator(int kernel): kernel_(kernel) { }
 
 UniformGenerator::~UniformGenerator() = default;
 
-double UniformGenerator::Rand()
-{
+double UniformGenerator::Rand() {
 	int h = kernel_ / kQ;
 	kernel_ = kA * (kernel_ - kQ * h) - kR * h;
 	if (kernel_ < 0)
@@ -51,17 +50,6 @@ void UniformGenerator::generateSeedsData() {
 	}
 }
 
-std::vector<double> UniformGenerator::generateDataBasedOnSeed(int seed) {
-	int number_of_rands = 100000;
-	std::vector<double> numbers;
-
-	auto uniform_generator = UniformGenerator(seed);
-	for (int j = 0; j < number_of_rands; ++j) {
-		numbers.push_back(uniform_generator.Rand());
-	}
-
-	return numbers;
-}
 
 double UniformGenerator::RandExp(double lambda) {
 	double k = Rand();
@@ -92,3 +80,4 @@ std::pair<double, double> UniformGenerator::RandGauss(double mu, double sigma) {
 double UniformGenerator::RandScaled() {
 	return Rand() * (50.0 - 5.0) + 5.0;
 }
+

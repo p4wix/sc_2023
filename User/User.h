@@ -10,7 +10,6 @@
 #include <random>
 #include <sstream>
 
-
 #include "../Constants/Constants.h"
 #include "../Process/Process.h"
 #include "../Network/Network.h"
@@ -19,32 +18,48 @@ enum class BaseStation { BS1 = 'BS1', BS2 = 'BS2' };
 
 class User : public Process {
 protected:
-	int id_{}; // const user id
-	double currentLocation_{}; // user position along the x axis
+	int id_{};
+	double currentLocation_{};
 	BaseStation currentBaseStation{};
-	double speed_{}; // User speed
-	double powerReceivedBS1_{}; // power received from station BS1
-	double powerReceivedBS2_{}; // power received from station BS2
-	int timeToTrigger_{}; // Optimisation of the parameter TTT
-	double timeToNextRaport{};
+	double speed_{};
+	double powerReceivedBS1_{};
+	double powerReceivedBS2_{};
+	int timeToTrigger_{};
 	int howManyTimesUserChangedBaseStation{};
+	bool disconnectedByDelta{};
+	bool disconnectedByDistance{};
+	double userJoinTime{};
+	double userLeaveTime{};
+	bool sendReport{};
+
 
 	UniformGenerator* speedGenerator; // rozkład równomierny przeskalowany o [5;50]
 	UniformGenerator* spawnTimeGenerator; // rozkład wykładniczym o intensywności λ
 	UniformGenerator* powerBaseStationGenerator; // rozkład Gaussa z średnią 0 i odchyleniem 4
 
 public:
-	User(double, Network*, Agenda*, int, double, double, UniformGenerator*, UniformGenerator*, UniformGenerator*);
+	char** argv_;
+
+	User(double, Network*, Agenda*, int, double, double, UniformGenerator*, UniformGenerator*, UniformGenerator*, char**);
 
 	void execute() override;
-	void sentUserReport(std::fstream&) override;
-	void setPowerReceived(); // the power received by the base station user
+	int userId() override;
+	void setPowerReceived();
+	void move();
+	void setUserJoinTime(double);
+	void setUserLeaveTime(double);
+
 	[[nodiscard]] bool alphaCondition() const;
 	[[nodiscard]] bool deltaCondition() const;
 	[[nodiscard]] bool distanceCondition() const;
-
-	void move();
 	[[nodiscard]] int get_id() const;
+	[[nodiscard]] double get_current_location() const;
+	[[nodiscard]] double get_how_many_times_base_changed() const;
+	[[nodiscard]] bool get_delta_disc() const;
+	[[nodiscard]] bool get_distance_disc() const;
+	[[nodiscard]] double get_user_time_in_network() const;
+	[[nodiscard]] double get_user_join_time() const;
+	[[nodiscard]] double get_user_speed() const;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const BaseStation& bs) {

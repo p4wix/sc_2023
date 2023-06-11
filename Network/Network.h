@@ -7,31 +7,37 @@
 
 #include <iostream>
 #include <queue>
-#include <list>
 #include "../User/User.h"
 
 class User;
 
 class Network {
 	std::queue<User*> buffer_;
-	std::queue<User*> waitingBuffer_;
 
 public:
-	bool isUsersLimitReached{};
-	std::list<int> numbersOfHandledUsers{};
+	char** argv_;
 
-	Network();
+	int waitingBuffer_{};
+	int allUsers{};
+	bool isUsersLimitReached{};
+	int numbersOfHandledUsers{};
+	std::fstream currentUsersNumberInBuffersFile;
+	std::fstream currentUsersDisconnectReportFile;
+	std::fstream currentUsersChangeStationReportFile;
+
+	Network(char**);
 	~Network();
 
 	void addUserToNetwork(User*);
 	void removeUserFromNetwork(User*);
-	bool isWaitingBufforEmpty();
+	void handleFiles();
+	void decrementWaitingBuffer();
+
+	void sendCurrentUsersNumberInBuffersReport(double, int);
+	void sendCurrentUserDisconnectReport(User*);
+	void sendCurrentUserChangeStationReport(User*);
 
 	size_t get_buffer_size();
-	size_t get_waiting_buffer_size();
-
-	User* getBufforLastElement();
-	void removeWaitingBufforFirstUser();
 };
 
 #endif //SC_2023_NETWORK_H
