@@ -29,7 +29,6 @@ void Network::removeUserFromNetwork(User *user) {
 	// +1 number of handled users
 	++numbersOfHandledUsers;
 
-	//std::stoi(argv_[2])
 	if(numbersOfHandledUsers == std::stoi(argv_[2])) {
 		isUsersLimitReached = true;
 	}
@@ -55,7 +54,7 @@ void Network::removeUserFromNetwork(User *user) {
 	buffer_ = std::move(tempBuffer);
 
 	if(numbersOfHandledUsers > 25) {
-		//sendCurrentUsersNumberInBuffersReport(user->get_time(), user->get_id());
+		sendCurrentUsersNumberInBuffersReport(user->get_time(), user->get_id());
 	}
 }
 

@@ -50,7 +50,6 @@ void UniformGenerator::generateSeedsData() {
 	}
 }
 
-
 double UniformGenerator::RandExp(double lambda) {
 	double k = Rand();
 	return -(1.0/lambda) * log(k);

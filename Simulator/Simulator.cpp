@@ -61,7 +61,6 @@ void Simulator::run(int time) {
 }
 
 void Simulator::handleSeedFile() {
-	// std::stoi(argv_[1])
 	int seedPackNumber = std::stoi(argv_[1]);
 	std::cout << seedPackNumber << std::endl;
 	std::string file_name = "../Generator/Seed/seed-" + std::to_string(seedPackNumber) + ".txt";

@@ -92,6 +92,10 @@ void User::execute() {
 	}
 }
 
+int User::userId() {
+	return get_id();
+}
+
 void User::setPowerReceived() {
 	powerReceivedBS1_ = 4.56 - 22 * std::log10(currentLocation_) + powerBaseStationGenerator->RandGauss(0, 4).first;
 	powerReceivedBS2_ = 4.56 - 22 * std::log10(currentLocation_) + powerBaseStationGenerator->RandGauss(0, 4).second;
@@ -153,8 +157,4 @@ double User::get_user_join_time() const {
 
 double User::get_user_speed() const {
 	return speed_;
-}
-
-int User::userId() {
-	return get_id();
 }
